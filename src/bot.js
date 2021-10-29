@@ -1,49 +1,33 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const discord_js_1 = require("discord.js");
-const rest_1 = require("@discordjs/rest");
-const v9_1 = require("discord-api-types/v9");
-const imgflip_1 = __importDefault(require("./modules/imgflip"));
-const dotenv_1 = __importDefault(require("dotenv"));
-const https = __importStar(require("https"));
-dotenv_1.default.config();
-const img = new imgflip_1.default(process.env.IMGFLIP_USERNAME, process.env.IMGFLIP_PASSWORD);
-img.meme(181913649, "Niggers bad");
-const discord_client = new discord_js_1.Client({
+import { Client, Intents } from "discord.js";
+import { REST } from "@discordjs/rest";
+import { Routes } from "discord-api-types/v9";
+import dotenv from "dotenv";
+import * as https from 'https';
+import { command_help } from "./Commands/help.js";
+import { command_emplois_sid } from "./Commands/emplois_sid.js";
+import { command_emplois_ia } from "./Commands/emplois_ia.js";
+import { command_drive } from "./Commands/drive.js";
+import { command_code } from "./Commands/code.js";
+import { command_spongebob } from "./Commands/spongebob.js";
+import { command_memes } from "./Commands/memes.js";
+dotenv.config();
+const discord_client = new Client({
     intents: [
-        discord_js_1.Intents.FLAGS.GUILDS,
-        discord_js_1.Intents.FLAGS.GUILD_MESSAGES,
-        discord_js_1.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        discord_js_1.Intents.FLAGS.DIRECT_MESSAGES,
-        discord_js_1.Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.DIRECT_MESSAGES,
+        Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
     ],
     partials: [
         "CHANNEL"
     ]
 });
 const commands = [
+    {
+        name: "help",
+        description: "Shows the list of commands available"
+    },
     {
         name: "emplois_sid",
         description: "Emplois du temps SID"
@@ -71,6 +55,18 @@ const commands = [
                 type: 3 // String
             }
         ]
+    },
+    {
+        name: "memes",
+        description: "Make memes",
+        options: [
+            {
+                name: "input",
+                description: "Choose a meme template",
+                required: true,
+                type: 3 // String
+            }
+        ]
     }
 ];
 const discord_token = process.env.DISCORDJS_BOT_TOKEN;
@@ -80,15 +76,15 @@ const emplois_sid_link = process.env.EMPLOIS_SID;
 const emplois_ia_link = process.env.EMPLOIS_IA;
 const mega_link = process.env.MEGA_DRIVE_SID;
 const spongebob_gif = process.env.SPONGEBOB_GIF;
-const rest = new rest_1.REST({ version: '9' }).setToken(discord_token);
+const rest = new REST({ version: '9' }).setToken(discord_token);
 (async () => {
     try {
         console.log('Started refreshing application (/) commands.');
         await rest.put(
         // This is for testing purposes
-        //Routes.applicationGuildCommands(client_id, guild_id),
+        // Routes.applicationGuildCommands(client_id, guild_id),
         // This is for production
-        v9_1.Routes.applicationCommands(client_id), { body: commands });
+        Routes.applicationCommands(client_id), { body: commands });
         console.log('Successfully reloaded application (/) commands.');
     }
     catch (error) {
@@ -112,100 +108,33 @@ discord_client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) {
         return;
     }
-    const { commandName, options } = interaction;
+    const { commandName } = interaction;
+    // help command
+    if (commandName === "help") {
+        command_help(discord_client, interaction);
+    }
     // emplois_sid command
-    if (commandName === "emplois_sid") {
-        // Check if the interaction is happening in a discord server (to get channel.name)
-        if (interaction.inGuild()) {
-            console.log(`${interaction.user.tag} in ${interaction.channel?.name} in ${interaction.guild?.name} : used the ${commandName} command`);
-        }
-        // Interaction happening in a DM
-        else {
-            console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command`);
-        }
-        const attachment = new discord_js_1.MessageAttachment(emplois_sid_link, 'emplois_sid.png');
-        const embed = new discord_js_1.MessageEmbed()
-            .setTitle("Emplois du temps SID")
-            .setImage('attachment://emplois_sid.png');
-        await interaction.reply({ embeds: [embed], files: [attachment] });
+    else if (commandName === "emplois_sid") {
+        command_emplois_sid(interaction, emplois_sid_link);
     }
     // emplois_ia command
     else if (commandName === "emplois_ia") {
-        // Check if the interaction is happening in a discord server (to get channel.name)
-        if (interaction.inGuild()) {
-            console.log(`${interaction.user.tag} in ${interaction.channel?.name} in ${interaction.guild?.name} : used the ${commandName} command`);
-        }
-        // Interaction happening in a DM
-        else {
-            console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command`);
-        }
-        const attachment = new discord_js_1.MessageAttachment(emplois_ia_link, 'emplois_ia.png');
-        const embed = new discord_js_1.MessageEmbed()
-            .setTitle("Emplois du temps IA")
-            .setImage('attachment://emplois_ia.png');
-        await interaction.reply({ embeds: [embed], files: [attachment] });
+        command_emplois_ia(interaction, emplois_ia_link);
     }
+    // drive command
     else if (commandName === "drive") {
-        // Check if the interaction is happening in a discord server (to get channel.name)
-        if (interaction.inGuild()) {
-            console.log(`${interaction.user.tag} in ${interaction.channel?.name} in ${interaction.guild?.name} : used the ${commandName} command`);
-        }
-        // Interaction happening in a DM
-        else {
-            console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command`);
-        }
-        const embed = new discord_js_1.MessageEmbed()
-            .setTitle("Mega Drive")
-            .setDescription(`Lien du Mega Drive - SID : ${mega_link}`);
-        await interaction.reply({ embeds: [embed] });
+        command_drive(interaction, mega_link);
     }
+    // code command
     else if (commandName === "code") {
-        // Check if the interaction is happening in a discord server (to get channel.name)
-        if (interaction.inGuild()) {
-            console.log(`${interaction.user.tag} in ${interaction.channel?.name} in ${interaction.guild?.name} : used the ${commandName} command`);
-        }
-        // Interaction happening in a DM
-        else {
-            console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command`);
-        }
-        const embed = new discord_js_1.MessageEmbed()
-            .setTitle("Bot Source Code")
-            .setDescription(`The bot source code is available on Github at this address : https://github.com/Drayano/Discord-Bot`);
-        await interaction.reply({ embeds: [embed] });
+        command_code(interaction);
     }
     // spongebob command
     else if (commandName === "spongebob") {
-        // Check if the interaction is happening in a discord server (to get channel.name)
-        if (interaction.inGuild()) {
-            console.log(`${interaction.user.tag} in ${interaction.channel?.name} in ${interaction.guild?.name} : used the ${commandName} command with '${options.get("input")?.value?.toString()}'`);
-        }
-        // Interaction happening in a DM
-        else {
-            console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command with '${options.get("input")?.value?.toString()}'`);
-        }
-        let text = "";
-        let spongebob = "";
-        // Check if the input text isn't an empty string
-        if (options.get("input")?.value?.toString().length !== undefined) {
-            for (let i = 0; i < options.get("input")?.value?.toString().length; i++) {
-                text = options.get("input")?.value?.toString();
-                if (i % 2 === 0) {
-                    spongebob += text.charAt(i).toLowerCase();
-                }
-                else if (i % 2 === 1) {
-                    spongebob += text.charAt(i).toUpperCase();
-                }
-            }
-        }
-        // If the user provides an empty string show an error
-        else {
-            console.log("Error on the spongebob command, no text provided !");
-            spongebob = "No text provided";
-        }
-        const embed = new discord_js_1.MessageEmbed()
-            .setImage(spongebob_gif);
-        await interaction.reply({ embeds: [embed] });
-        await interaction.editReply(spongebob);
+        command_spongebob(interaction, spongebob_gif);
+    }
+    else if (commandName === "memes") {
+        command_memes(interaction);
     }
 });
 // Messages handling
@@ -213,10 +142,10 @@ discord_client.on("messageCreate", (message) => {
     // Check if the message is sent in a discord DM
     if (message.channel.type === "DM") {
         console.log(`${message.author.tag} in a Direct Message : ${message.content}`);
-        message.attachments.each(attachment_item => console.log(`Attached file : ${attachment_item.attachment}`));
+        message.attachments.each((attachment_item) => console.log(`Attached file : ${attachment_item.attachment}`));
         // Print embeds if there are any
         if (message.embeds.length > 0) {
-            message.embeds.forEach(embed => console.log(`\nEmbed : ${JSON.stringify(embed.toJSON())}\n`));
+            message.embeds.forEach((embed) => console.log(`\nEmbed : ${JSON.stringify(embed.toJSON())}\n`));
         }
     }
     // The message is being sent in a discord server so we can get (channel.name)
@@ -226,16 +155,16 @@ discord_client.on("messageCreate", (message) => {
         let text = message.content;
         text = text.replace(/[^0-9\s]/g, "");
         let arr = text.split(" ");
-        arr.forEach(id => {
-            if (discord_client.users.cache.find(user => user.id === id) !== undefined) {
-                console.log(`Tag : ${discord_client.users.cache.find(user => user.id === id)?.tag}`);
+        arr.forEach((id) => {
+            if (discord_client.users.cache.find((user) => user.id === id) !== undefined) {
+                console.log(`Tag : ${discord_client.users.cache.find((user) => user.id === id)?.tag}`);
             }
         });
         // Get the emotes IDs and use them to find out the emote URL
         let emoji = message.content;
         emoji = emoji.replace(/[^0-9\s]/g, "");
         let arr1 = emoji.split(" ");
-        arr1.forEach(id => {
+        arr1.forEach((id) => {
             https.get(`https://cdn.discordapp.com/emojis/${id}.png`, (res) => {
                 const { statusCode } = res;
                 if (statusCode === 200) { // HTTP 200 = OK
@@ -244,7 +173,7 @@ discord_client.on("messageCreate", (message) => {
             });
         });
         // Get Attachement files if there are any
-        message.attachments.each(attachment_item => console.log(`Attached file : ${attachment_item.attachment}`));
+        message.attachments.each((attachment_item) => console.log(`Attached file : ${attachment_item.attachment}`));
         // Print embeds if there are any
         if (message.embeds.length > 0) {
             message.embeds.forEach((embed) => console.log(`\nEmbed : ${JSON.stringify(embed.toJSON())}\n`));

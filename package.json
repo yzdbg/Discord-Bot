@@ -27,5 +27,6 @@
   },
   "devDependencies": {
     "typescript": "^4.4.4"
-  }
+  },
+  "type": "module"
 }
