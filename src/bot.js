@@ -25,9 +25,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const rest_1 = require("@discordjs/rest");
 const v9_1 = require("discord-api-types/v9");
+const imgflip_1 = __importDefault(require("./modules/imgflip"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const https = __importStar(require("https"));
 dotenv_1.default.config();
+const img = new imgflip_1.default(process.env.IMGFLIP_USERNAME, process.env.IMGFLIP_PASSWORD);
+img.meme(181913649, "Niggers bad");
 const discord_client = new discord_js_1.Client({
     intents: [
         discord_js_1.Intents.FLAGS.GUILDS,
@@ -83,10 +86,9 @@ const rest = new rest_1.REST({ version: '9' }).setToken(discord_token);
         console.log('Started refreshing application (/) commands.');
         await rest.put(
         // This is for testing purposes
-        v9_1.Routes.applicationGuildCommands(client_id, guild_id), 
+        //Routes.applicationGuildCommands(client_id, guild_id),
         // This is for production
-        //Routes.applicationCommands(client_id),
-        { body: commands });
+        v9_1.Routes.applicationCommands(client_id), { body: commands });
         console.log('Successfully reloaded application (/) commands.');
     }
     catch (error) {
