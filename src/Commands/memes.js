@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import axios from "axios";
 export async function command_memes(interaction) {
     if (!interaction.isCommand()) {
         return;
@@ -12,19 +12,36 @@ export async function command_memes(interaction) {
     else {
         console.log(`${interaction.user.tag} in a Direct Message : used the ${commandName} command with '${options.get("input")?.value?.toString()}'`);
     }
-    // Use a counter so we can stop looking after finding the first matching meme (return alone DOES NOT WORK)
-    let i = 0;
-    fetch("https://api.imgflip.com/get_memes")
-        .then((res) => res.json())
+    let input = options.get("input")?.value?.toString().toLowerCase().split("-");
+    axios.get("https://api.imgflip.com/get_memes")
+        .then((res) => res)
         .then((data) => {
-        let memes = data.data.memes;
-        memes.forEach((meme) => {
+        let memes = data.data.data.memes;
+        let meme = memes.find((meme) => {
             // If the input name matches the name of any meme returned by the API
-            if (i === 0 && meme.name.toString().toLowerCase().includes(options.get("input")?.value?.toString().toLowerCase())) {
-                interaction.reply(meme.url);
-                i++;
-                return;
-            }
+            // Now returns the first match
+            return meme.name.toString().toLowerCase().includes(input[0]);
         });
+        if (!meme) {
+            interaction.reply("Is that a meme from the future or something ?");
+        }
+        else {
+            const params = {
+                template_id: meme.id,
+                text0: input[1],
+                text1: input[2],
+                username: process.env.IMGFLIP_USERNAME,
+                password: process.env.IMGFLIP_PASSWORD,
+            };
+            axios.get(`https://api.imgflip.com/caption_image?template_id=${params.template_id}&username=${params.username}&password=${params.password}&text0=${params.text0}&text1=${params.text1}`)
+                .then(function (response) {
+                // handle success
+                interaction.reply(response.data.data.url);
+            })
+                .catch(function (error) {
+                // handle error
+                console.log(error);
+            });
+        }
     });
 }

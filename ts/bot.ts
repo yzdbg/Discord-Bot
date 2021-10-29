@@ -1,7 +1,6 @@
 import { Client, Intents, Interaction, Message, MessageAttachment, MessageEmbed } from "discord.js";
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
-import Imgflip from "./modules/imgflip"
 import dotenv from "dotenv";
 
 import * as https from 'https'; 
@@ -15,13 +14,6 @@ import { command_spongebob } from "./Commands/spongebob.js";
 import { command_memes } from "./Commands/memes.js";
 
 dotenv.config();
-
-const img = new Imgflip(
-    process.env.IMGFLIP_USERNAME,
-    process.env.IMGFLIP_PASSWORD
-)
-
-img.meme(181913649, "Niggers bad")
 
 const discord_client: Client = new Client({ 
     intents: [
